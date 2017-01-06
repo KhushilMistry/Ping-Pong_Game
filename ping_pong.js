@@ -14,8 +14,10 @@ function Game() {
 
     this.p1 = new Paddle(5, 0);
     this.p1.y = this.height / 2 - this.p1.height / 2;
+    this.display1 = new Display(this.width / 4, 25);
     this.p2 = new Paddle(this.width - 5 - 2, 0);
     this.p2.y = this.height / 2 - this.p2.height / 2;
+    this.display2 = new Display(this.width * 3 / 4, 25);
 }
 
 Game.prototype.draw = function () {
@@ -24,8 +26,37 @@ Game.prototype.draw = function () {
 
     this.ball.draw(this.context);
 
+    this.display1.draw(this.context);
+    this.display2.draw(this.context);
+
     this.p1.draw(this.context);
     this.p2.draw(this.context);
+};
+
+Game.prototype.score = function (p) {
+    // player scores
+    p.score++;
+    var player = p == this.p1 ? 0 : 1;
+
+    // set ball position
+    this.ball.x = this.width / 2;
+    this.ball.y = p.y + p.height / 2;
+
+    // set ball velocity
+    this.ball.vy = Math.floor(Math.random() * 12 - 6);
+    this.ball.vx = 7 - Math.abs(this.ball.vy);
+    if (player == 1)
+        this.ball.vx *= -1;
+};
+
+function Display(x, y) {
+    this.x = x;
+    this.y = y;
+    this.value = 0;
+}
+
+Display.prototype.draw = function (p) {
+    p.fillText(this.value, this.x, this.y);
 };
 
 Game.prototype.update = function () {
@@ -33,11 +64,9 @@ Game.prototype.update = function () {
         return;
 
     this.ball.update();
-    if (this.ball.x > this.width || this.ball.x + this.ball.width < 0) {
-        this.ball.vx = -this.ball.vx;
-    } else if (this.ball.y > this.height || this.ball.y + this.ball.height < 0) {
-        this.ball.vy = -this.ball.vy;
-    }
+    this.display1.value = this.p1.score;
+    this.display2.value = this.p2.score;
+
 
     if (this.keys.isPressed(83)) {
         this.p1.y = Math.min(this.height - this.p1.height, this.p1.y + 4);
@@ -50,7 +79,7 @@ Game.prototype.update = function () {
     } else if (this.keys.isPressed(38)) {
         this.p2.y = Math.max(0, this.p2.y - 4);
     }
-    
+
     if (this.ball.vx > 0) {
         if (this.p2.x <= this.ball.x + this.ball.width &&
             this.p2.x > this.ball.x - this.ball.vx + this.ball.width) {
@@ -83,6 +112,11 @@ Game.prototype.update = function () {
         (this.ball.vy > 0 && this.ball.y + this.ball.height > this.height)) {
         this.ball.vy = -this.ball.vy;
     }
+
+    if (this.ball.x >= this.width)
+        this.score(this.p1);
+    else if (this.ball.x + this.ball.width <= 0)
+        this.score(this.p2);
 };
 
 function Ball() {
@@ -141,6 +175,9 @@ function Paddle(x, y) {
 Paddle.prototype.draw = function (p) {
     p.fillRect(this.x, this.y, this.width, this.height);
 }
+
+
+
 
 
 var game = new Game();
